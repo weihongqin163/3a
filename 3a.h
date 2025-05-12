@@ -163,7 +163,7 @@ AGORA_API_C_HDL agora_ap_service_create();
 /**
  * @ANNOTATION:GROUP:agora_service
  */
-AGORA_API_C_INT agora_ap_service_initialize(AGORA_API_C_HDL service_handle, const _agora_ap_service_config* config);
+AGORA_API_C_INT agora_ap_service_initialize(AGORA_API_C_HDL service_handle, const _agora_ap_service_config* config, _agora_ap_processor_event_handler *handler);
 
 /**
  * @ANNOTATION:GROUP:agora_service
