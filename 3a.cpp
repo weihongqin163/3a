@@ -274,20 +274,66 @@ const char* agora_ap_processor_config_get_message(_agora_ap_processor_config *co
     return "config";
 }
 
-AgoraUAP::AgoraAudioProcessing::AecConfig  mapaecconfig(const _agora_ap_processor_config& config)
+AgoraUAP::AgoraAudioProcessing::AecConfig mapaecconfig(const _agora_ap_processor_config& config)
 {
     AgoraUAP::AgoraAudioProcessing::AecConfig aecConfig;
     aecConfig.enabled = config.aec_config.enabled;
     aecConfig.stereoAecEnabled = config.aec_config.stereoAecEnabled;
     aecConfig.enableAecAutoReset = config.aec_config.enableAecAutoReset;
     aecConfig.aecStartupMaxSuppressTimeInMs = config.aec_config.aecStartupMaxSuppressTimeInMs;
-    aecConfig.filterLength = config.aec_config.filterLength;
-    aecConfig.aecModelType = config.aec_config.aecModelType;
-    aecConfig.aiaecSuppressionMode = config.aec_config.aiaecSuppressionMode;
-    aecConfig.aiaecSuppressionMode = config.aec_config.aiaecSuppressionMode;
-
+    
+    // 正确的类型转换
+    aecConfig.filterLength = AgoraUAP::optional<AgoraUAP::AgoraAudioProcessing::AecFilterLength>(
+        static_cast<AgoraUAP::AgoraAudioProcessing::AecFilterLength>(config.aec_config.filterLength)
+    );
+    
+    aecConfig.aecModelType = AgoraUAP::optional<AgoraUAP::AgoraAudioProcessing::AecModelType>(
+        static_cast<AgoraUAP::AgoraAudioProcessing::AecModelType>(config.aec_config.aecModelType)
+    );
+    
+    aecConfig.aiaecSuppressionMode = AgoraUAP::optional<AgoraUAP::AgoraAudioProcessing::AIAECSuppressionMode>(
+        static_cast<AgoraUAP::AgoraAudioProcessing::AIAECSuppressionMode>(config.aec_config.aiaecSuppressionMode)
+    );
+    
     return aecConfig;
+}
+AgoraUAP::AgoraAudioProcessing::AnsConfig mapansconfig(const _agora_ap_processor_config& config)
+{
+    AgoraUAP::AgoraAudioProcessing::AnsConfig ansConfig;
+    ansConfig.enabled = config.ans_config.enabled;
+    
+    ansConfig.ansModelType = AgoraUAP::optional<AgoraUAP::AgoraAudioProcessing::AnsModelType>(
+        static_cast<AgoraUAP::AgoraAudioProcessing::AnsModelType>(config.ans_config.ansModelType)
+    );
+    
+    ansConfig.suppressionMode = AgoraUAP::optional<AgoraUAP::AgoraAudioProcessing::AnsSuppressionMode>(
+        static_cast<AgoraUAP::AgoraAudioProcessing::AnsSuppressionMode>(config.ans_config.suppressionMode)
+    );
+    
+    ansConfig.speechProtectThreshold = config.ans_config.speechProtectThreshold;
+    return ansConfig;
+}
+AgoraUAP::AgoraAudioProcessing::AgcConfig mapagcconfig(const _agora_ap_processor_config& config)
+{
+    AgoraUAP::AgoraAudioProcessing::AgcConfig agcConfig;
+    agcConfig.enabled = config.agc_config.enabled;
+    agcConfig.maxDigitalGaindB = config.agc_config.maxDigitalGaindB;
+    agcConfig.targetleveldB = config.agc_config.targetleveldB;
+    agcConfig.curve_slope = config.agc_config.curve_slope;
+    return agcConfig;
+}
 
+AgoraUAP::AgoraAudioProcessing::BGHVSCfg mapbghvsconfig(const _agora_ap_processor_config& config)
+{
+    AgoraUAP::AgoraAudioProcessing::BGHVSCfg bghvsConfig;
+    bghvsConfig.enabled = config.bghvs_config.enabled;
+    bghvsConfig.bghvsSOSLenInMs = config.bghvs_config.bghvsSOSLenInMs;
+    bghvsConfig.bghvsEOSLenInMs = config.bghvs_config.bghvsEOSLenInMs;
+    bghvsConfig.bghvsDelayInFrmNums = config.bghvs_config.bghvsDelayInFrmNums;
+    bghvsConfig.bghvsSppMode = AgoraUAP::optional<AgoraUAP::AgoraAudioProcessing::BghvsSuppressionMode>(
+        static_cast<AgoraUAP::AgoraAudioProcessing::BghvsSuppressionMode>(config.bghvs_config.bghvsSppMode)
+    );
+    return bghvsConfig;
 }
 
 AGORA_API_C_HDL agora_ap_processor_create(AGORA_API_C_HDL service_handle, const _agora_ap_processor_config& config)
@@ -333,13 +379,18 @@ AGORA_API_C_HDL agora_ap_processor_create(AGORA_API_C_HDL service_handle, const 
     AgoraUAP::AgoraAudioProcessing::AnsConfig ans_config;
     AgoraUAP::AgoraAudioProcessing::BGHVSCfg bghvs_config;
 
+    aec_config = mapaecconfig(config);
+    ans_config = mapansconfig(config);
+    agc_config = mapagcconfig(config);
+    bghvs_config = mapbghvsconfig(config);
+
 
 
     // set processor config
-    ret = processor->SetAecConfiguration(config.aec_config);
-    ret = processor->SetAnsConfiguration(config.ans_config);
-    ret = processor->SetAgcConfiguration(config.agc_config);
-    ret = processor->SetBGHVSConfiguration(config.bghvs_config);
+    ret = processor->SetAecConfiguration(aec_config);
+    ret = processor->SetAnsConfiguration(ans_config);
+    ret = processor->SetAgcConfiguration(agc_config);
+    ret = processor->SetBGHVSConfiguration(bghvs_config);
 
     //dump option
     AgoraUAP::AgoraAudioProcessing::DumpOption dumpOption(true, "./dump/"); //directory
